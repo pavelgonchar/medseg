@@ -144,7 +144,7 @@ cfg.TRAIN.USE_PREFETCH = False
 cfg.TRAIN.DISPLAY_INTERVAL = 100
 cfg.TRAIN.SOLVER = None
 cfg.TRAIN.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('train.prototxt')))
-cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_weigted_1.1.7_iter_250000.caffemodel')
+cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_original_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_original_weigted_c3_1.1.7_iter_80000.caffemodel')
 cfg.TRAIN.IMDB_NAME = 'lits_Training_Batch_trainval_2D'
 cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
 ###### ###### ###### ###### ###### ######

@@ -21,7 +21,7 @@ add_path(caffe_path)
 lib_path = osp.join(this_dir, '..', 'lib')
 add_path(lib_path)
 # Add LITS-CHALLENGE
-lib_path = osp.join(this_dir, '..', 'LITS-CHALLENGE')
+lib_path = osp.join(this_dir, '..', 'evaluation')
 add_path(lib_path)
 
 # Add cv2 path

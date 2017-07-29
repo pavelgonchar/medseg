@@ -101,6 +101,7 @@ MANIFEST-*
 
 # Expe
 experiments/*
+output
 output/*
 scripts/*
 models/*

@@ -58,5 +58,3 @@ if net in ['densenet_unet', 'densenet_unet_8s']:
 
 if net in ['uvnet_2d_bn', 'uvnet_2d_bn_weigted','uvnet_2d_bn_original_weigted', 'uvnet_2d_bn_modified_weigted']:
 	make_uvnet(net, dim_data, dim_label, num_class, prototxt_train, prototxt_test)
-
-
