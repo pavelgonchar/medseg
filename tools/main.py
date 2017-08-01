@@ -111,8 +111,11 @@ snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_original_weigted_c3'
 # snapshot_prefix = 'uvnet_2d_bn_original_weigted_c3_1.1.7_refined'
 # 7
-# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
-# snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.7'
+cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
+snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
+# 8
+#cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
+#snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10'
 ###### ###### ###### ###### ###### ######
 ''' 
 Train
@@ -121,11 +124,11 @@ cfg.TRAIN.SEGMENTATION_MODE = '2D'
 cfg.TRAIN.HU_WINDOW = [-200, 300]
 cfg.TRAIN.DATA_RANGE= [0, 1]
 cfg.TRAIN.PIXEL_STATISTICS =(-93.59, 131.86)
-cfg.TRAIN.SCALES = (432,)
+cfg.TRAIN.SCALES = (416,)
 cfg.TRAIN.USE_FLIP = True
 cfg.TRAIN.ROTATIONS = (0,1,2,3) # Number of times the array is rotated by 90 degrees
 
-cfg.TRAIN.CROPPED_SIZE = (432,432,5)
+cfg.TRAIN.CROPPED_SIZE = (416,416,5)
 
 cfg.TRAIN.ADJACENT = True
 cfg.TRAIN.DEBUG = False
@@ -136,15 +139,15 @@ cfg.TRAIN.BG.BRIGHT = False
 
 cfg.TRAIN.TRIM = edict()
 cfg.TRAIN.TRIM.MINSIZE = [64,64,5]
-cfg.TRAIN.TRIM.PAD = [64, 64, 0]
+cfg.TRAIN.TRIM.PAD = [32, 32, 0]
 
 cfg.TRAIN.CLASS = edict()
 cfg.TRAIN.CLASS.USE_WEIGHT = True
-cfg.TRAIN.CLASS.WEIGHT = [1, 1, 7]
-# cfg.TRAIN.CLASS.NUMBER = 3
-# cfg.TRAIN.CLASS.SPLIT = (0.5, 1.5)
-cfg.TRAIN.CLASS.NUMBER = 2
-cfg.TRAIN.CLASS.SPLIT = (0.5,)
+cfg.TRAIN.CLASS.WEIGHT = [1, 1, 10]
+cfg.TRAIN.CLASS.NUMBER = 3
+cfg.TRAIN.CLASS.SPLIT = (0.5, 1.5)
+#cfg.TRAIN.CLASS.NUMBER = 2
+#cfg.TRAIN.CLASS.SPLIT = (0.5,)
 
 cfg.TRAIN.IMS_PER_BATCH = 2
 cfg.TRAIN.BATCH_SIZE = 2
@@ -154,9 +157,9 @@ cfg.TRAIN.USE_PREFETCH = False
 cfg.TRAIN.DISPLAY_INTERVAL = 100
 cfg.TRAIN.SOLVER = None
 cfg.TRAIN.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('train.prototxt')))
-#cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_original_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_original_weigted_c3_1.1.7_iter_80000.caffemodel')
+cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_incept_weigted_c3_1.1.7_iter_260000.caffemodel')
 cfg.TRAIN.IMDB_NAME = 'lits_Training_Batch_trainval_2D'
-cfg.TRAIN.NUM_PROCESS = 1 #the number of threads to do data augmentation
+cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
 ###### ###### ###### ###### ###### ######
 ''' SOLVER PARAMETER Setting
 '''
@@ -166,7 +169,7 @@ SOLVER_PARAMETER.BASE_LR = 0.001
 SOLVER_PARAMETER.MOMENTUM = 0.99
 SOLVER_PARAMETER.WEIGHT_DECAY = 0.0005
 SOLVER_PARAMETER.LR_POLICY = "step"
-SOLVER_PARAMETER.STEPSIZE = 80000
+SOLVER_PARAMETER.STEPSIZE = 100000
 SOLVER_PARAMETER.GAMMA = 0.1
 SOLVER_PARAMETER.DISPLAY_INTERVAL = cfg.TRAIN.DISPLAY_INTERVAL
 SOLVER_PARAMETER.SNAPSHOT = 0  #We disable standard caffe solver snapshotting and implement our own snapshot
@@ -206,7 +209,8 @@ cfg.TEST.MODE = 'TESTEVAL' # EVAL OR TEST OR TESTEVAL
 
 
 if __name__ == '__main__':
-	sys.argv.extend(['train', '--gpu=0'])
+	
+	# sys.argv.extend(['train', '--gpu=0'])
 	# sys.argv.extend(['test', '--gpu=0'])
 	args = parse_args()
 	print('Called with args:')
