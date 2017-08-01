@@ -127,7 +127,7 @@ class InferenceWrapper(object):
         blobs_out = self.net.forward()
         blobs_out = self.net.forward()
         prob = blobs_out['prob'][0]
-        outmap = np.argmax(prob, axis=0)
+        # outmap = np.argmax(prob, axis=0)
         # Gets the network output score
         # score = blobs_out['score'][0]
         # Gets target map
@@ -145,7 +145,7 @@ class InferenceWrapper(object):
         # vis_seg(axes, [input_data[0,0,:,:], np.argmax(upscore3, axis=0), np.argmax(upscore2, axis=0), np.argmax(upscore1, axis=0), np.argmax(score, axis=0), outmap])
         #exit()
 
-        return outmap
+        return prob
 
     def do_forward_3d(self, image, chunk_shape=None, stride=None):
         """ Due to the limited GPU memory,
@@ -187,7 +187,8 @@ class InferenceWrapper(object):
             if not self.params.ADJACENT:
                 # convert one channel image to 3 channel
                 im = np.repeat(im, 3, axis=2)
-            pred_map[:,:] = self.do_forward_2d(im)
+            outprob = self.do_forward_2d(im)
+            pred_map[:,:] = np.argmax(outprob, axis=0)
         else:
             ### Clean the bg of im
             if self.params.BG.CLEAN:
@@ -214,8 +215,21 @@ class InferenceWrapper(object):
                 input_patch_zoom_in = scale_image(input_patch, target_size=self.params.SCALES[0], max_size=self.params.MAX_SIZE, im_type='2D')
                 # convert one channel image to 3 channel
                 input_patch_zoom_in = np.repeat(input_patch_zoom_in, 3, axis=2)
-            ### forward get the prob
-            outmap = self.do_forward_2d(input_patch_zoom_in)
+            ### using overtile
+            # count is for counting the times of each position has overlapped
+            count_overlap = np.zeros((3, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
+            outprob = np.zeros((3, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
+            chunks_index = split2chunks(input_patch_zoom_in.shape, (self.params.CHUNK_SHAPE[0],self.params.CHUNK_SHAPE[1],input_patch_zoom_in.shape[2]), (self.params.STRIDE[0],self.params.STRIDE[1],input_patch_zoom_in.shape[2]))
+            for ind_chunk in chunks_index:
+                im_chunk = input_patch_zoom_in[ind_chunk[0][0]:ind_chunk[0][1], ind_chunk[1][0]:ind_chunk[1][1], ind_chunk[2][0]:ind_chunk[2][1]]
+                ### forward get the prob
+                outprob_chunk = self.do_forward_2d(im_chunk)
+                # stitch the chunk
+                outprob[:, ind_chunk[0][0]:ind_chunk[0][1], ind_chunk[1][0]:ind_chunk[1][1]] += outprob_chunk
+                count_overlap[:, ind_chunk[0][0]:ind_chunk[0][1], ind_chunk[1][0]:ind_chunk[1][1]] += 1.0
+            # get the final results
+            outprob = np.divide(outprob, count_overlap)
+            outmap = np.argmax(outprob, axis=0)
             ### Scale prob back to input_patch size
             outmap = outmap.astype(np.float32)
             outmap_zoom_out = scale_image(outmap, target_size=new_size[0], max_size=self.params.MAX_SIZE, im_type='2D')

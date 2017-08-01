@@ -426,8 +426,10 @@ def prepare_data_unit(im_path, gt_path, pixel_statistics,
     """ Rotation
     """
     if (rotation != 0) and (np.random.randint(2) == 0):
-        im = rotate(im, rotation, reshape=False, cval=np.min(im))
-        gt = rotate(gt, rotation, reshape=False, cval=0)
+        # im = rotate(im, rotation, reshape=False, cval=np.min(im))
+        # gt = rotate(gt, rotation, reshape=False, cval=0)
+        im = np.rot90(im, k=rotation)
+        gt = np.rot90(gt, k=rotation)
     """ Horizontal Flip
     """
     if use_flip and (np.random.randint(2) == 0):

@@ -98,10 +98,13 @@ if __name__ == "__main__":
 	# root_folder = '/home/zlp/dev/medseg/output/unet/unet_2d_bn_c2/lits_Test_Batch_trainval_3D'
 	# infolder = os.path.join(root_folder, 'unet_2d_bn_c2_liver_200000LCC_280000LCC_CB')
 	# outfolder = os.path.join(root_folder, 'unet_2d_bn_c2_liver_200000LCC_280000LCC_CB_LCC')
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_300000')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_300000_LCC')
 	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D'
-	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000')
-	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC')
-	root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D'
-	infolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG')
-	outfolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG_LCC')
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG_LCC')
+	root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D'
+	infolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG')
+	outfolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG_LCC')
 	largest_connected_component(infolder, outfolder)

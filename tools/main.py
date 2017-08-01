@@ -85,6 +85,9 @@ cfg.PID = os.getpid()
 # 2
 # cfg.EXP_DIR = 'unet/unet_2d_bn_c2'
 # snapshot_prefix = 'unet_2d_bn_c2_liver'
+# 3
+cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c2'
+snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
 ''' Lesion
 '''
 # 1 (1.1.5)
@@ -102,9 +105,14 @@ cfg.PID = os.getpid()
 # 5
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_modified_weigted_c3'
 # snapshot_prefix = 'uvnet_2d_bn_modified_weigted_c3_1.1.7'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_modified_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_modified_weigted_c3_1.1.7_refined'
 # 6
-cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_original_weigted_c3'
-snapshot_prefix = 'uvnet_2d_bn_original_weigted_c3_1.1.7'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_original_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_original_weigted_c3_1.1.7_refined'
+# 7
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.7'
 ###### ###### ###### ###### ###### ######
 ''' 
 Train
@@ -113,9 +121,9 @@ cfg.TRAIN.SEGMENTATION_MODE = '2D'
 cfg.TRAIN.HU_WINDOW = [-200, 300]
 cfg.TRAIN.DATA_RANGE= [0, 1]
 cfg.TRAIN.PIXEL_STATISTICS =(-93.59, 131.86)
-cfg.TRAIN.SCALES = (512,)
+cfg.TRAIN.SCALES = (432,)
 cfg.TRAIN.USE_FLIP = True
-cfg.TRAIN.ROTATIONS = (0,)
+cfg.TRAIN.ROTATIONS = (0,1,2,3) # Number of times the array is rotated by 90 degrees
 
 cfg.TRAIN.CROPPED_SIZE = (432,432,5)
 
@@ -127,14 +135,16 @@ cfg.TRAIN.BG.CLEAN = False
 cfg.TRAIN.BG.BRIGHT = False
 
 cfg.TRAIN.TRIM = edict()
-cfg.TRAIN.TRIM.MINSIZE = [64, 64, 5]
-cfg.TRAIN.TRIM.PAD = [16, 16, 0]
+cfg.TRAIN.TRIM.MINSIZE = [64,64,5]
+cfg.TRAIN.TRIM.PAD = [64, 64, 0]
 
 cfg.TRAIN.CLASS = edict()
 cfg.TRAIN.CLASS.USE_WEIGHT = True
 cfg.TRAIN.CLASS.WEIGHT = [1, 1, 7]
-cfg.TRAIN.CLASS.NUMBER = 3
-cfg.TRAIN.CLASS.SPLIT = (0.5, 1.5)
+# cfg.TRAIN.CLASS.NUMBER = 3
+# cfg.TRAIN.CLASS.SPLIT = (0.5, 1.5)
+cfg.TRAIN.CLASS.NUMBER = 2
+cfg.TRAIN.CLASS.SPLIT = (0.5,)
 
 cfg.TRAIN.IMS_PER_BATCH = 2
 cfg.TRAIN.BATCH_SIZE = 2
@@ -144,9 +154,9 @@ cfg.TRAIN.USE_PREFETCH = False
 cfg.TRAIN.DISPLAY_INTERVAL = 100
 cfg.TRAIN.SOLVER = None
 cfg.TRAIN.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('train.prototxt')))
-cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_original_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_original_weigted_c3_1.1.7_iter_80000.caffemodel')
+#cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_original_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_original_weigted_c3_1.1.7_iter_80000.caffemodel')
 cfg.TRAIN.IMDB_NAME = 'lits_Training_Batch_trainval_2D'
-cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
+cfg.TRAIN.NUM_PROCESS = 1 #the number of threads to do data augmentation
 ###### ###### ###### ###### ###### ######
 ''' SOLVER PARAMETER Setting
 '''
@@ -182,22 +192,22 @@ cfg.TEST.BG.BRIGHT = False
 cfg.TEST.HU_WINDOW = [-200, 300]
 cfg.TEST.DATA_RANGE= [0, 1]
 cfg.TEST.PIXEL_STATISTICS = (-93.59, 131.86)
-cfg.TEST.SCALES = (432,)
-cfg.TEST.MAX_SIZE = 512
+cfg.TEST.SCALES = (432,) # for zoom
+cfg.TEST.CHUNK_SHAPE = (432,432,1)
+cfg.TEST.STRIDE = (304,304,1)
+cfg.TEST.MAX_SIZE = 720
 cfg.TEST.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('test.prototxt')))
-cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 80000))
+cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 240000))
 cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
 # cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
-
 cfg.TEST.NUM_PROCESS = 6#the number of threads to do data augmentation
 cfg.TEST.MODE = 'TESTEVAL' # EVAL OR TEST OR TESTEVAL
-cfg.TEST.CHUNK_SHAPE = (156,156,8)
-cfg.TEST.STRIDE = (156,156,8)
+
 
 
 if __name__ == '__main__':
-	# sys.argv.extend(['train', '--gpu=0'])
-	# sys.argv.extend(['test', '--gpu=1'])
+	sys.argv.extend(['train', '--gpu=0'])
+	# sys.argv.extend(['test', '--gpu=0'])
 	args = parse_args()
 	print('Called with args:')
 	print(args)

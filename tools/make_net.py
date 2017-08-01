@@ -24,8 +24,8 @@ __nets = ['deeplab_largefov', 'deeplab_largefov_bn', 'deeplab_v2_vgg_16', 'deepl
 # dim_label = [5,1,156,156,8]
 dim_data = [2,5,432,432]
 dim_label = [2,1,432,432]
-num_class = 3
-net = 'uvnet_2d_bn_incept_weigted'
+num_class = 2
+net = 'uvnet_2d_bn_modified_weigted'
 
 backbone = net.split('_')[0]
 assert backbone in __backbones, 'Unknown backbone: {}'.format(backbone)
