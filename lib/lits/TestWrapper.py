@@ -127,24 +127,6 @@ class InferenceWrapper(object):
         blobs_out = self.net.forward()
         blobs_out = self.net.forward()
         prob = blobs_out['prob'][0]
-        # outmap = np.argmax(prob, axis=0)
-        # Gets the network output score
-        # score = blobs_out['score'][0]
-        # Gets target map
-        # outmap = np.argmax(score, axis=0)
-        # outmap = np.amax(score, axis=0)
-        # print blobs_out.keys()
-
-        # upscore3 = blobs_out['upscore3'][0]
-        # upscore2 = blobs_out['upscore2'][0]
-        # upscore1 = blobs_out['upscore1'][0]
-        # score = blobs_out['score'][0]
-        # outmap = np.argmax(upscore3 * 0.125 + upscore2 * 0.125 + upscore1 * 0.25 + score * 0.5, axis=0)
-        # fig, axes = plt.subplots(1, 6)
-        # vis_seg(axes, [input_data[0,0,:,:], outmap, outmap_v])
-        # vis_seg(axes, [input_data[0,0,:,:], np.argmax(upscore3, axis=0), np.argmax(upscore2, axis=0), np.argmax(upscore1, axis=0), np.argmax(score, axis=0), outmap])
-        #exit()
-
         return prob
 
     def do_forward_3d(self, image, chunk_shape=None, stride=None):
@@ -180,15 +162,18 @@ class InferenceWrapper(object):
 
         return prediction_map
     def get_output_map(self, im, gt):
-        """ Input image(3 dimension) and output pred_map(2 dimension) for input image
+        """ Input image(3 dimension)
+        output pred_map(3 dimension). C*W*H
         """
-        pred_map = np.zeros(im.shape[0:2], dtype=im.dtype)
+        pred_map_shape = [self.CLASS_NUM,]
+        pred_map_shape.extend(im.shape[0:2])
+        pred_map = np.zeros(pred_map_shape, dtype=np.float32)
         if not self.params.APPLY_MASK:
             if not self.params.ADJACENT:
                 # convert one channel image to 3 channel
                 im = np.repeat(im, 3, axis=2)
             outprob = self.do_forward_2d(im)
-            pred_map[:,:] = np.argmax(outprob, axis=0)
+            pred_map[:,:,:] = outprob
         else:
             ### Clean the bg of im
             if self.params.BG.CLEAN:
@@ -209,8 +194,8 @@ class InferenceWrapper(object):
             ### Scale input_patch to fix target_size
             if self.params.ADJACENT:
                 input_patch_zoom_in = np.zeros((self.params.SCALES[0], self.params.SCALES[0], input_patch.shape[2]), dtype=np.float32)
-                for ind in xrange(input_patch.shape[2]):
-                    input_patch_zoom_in[:,:,ind] = scale_image(input_patch[:,:,ind], target_size=self.params.SCALES[0], max_size=self.params.MAX_SIZE, im_type='2D')
+                for ind_slice in xrange(input_patch.shape[2]):
+                    input_patch_zoom_in[:,:,ind_slice] = scale_image(input_patch[:,:,ind_slice], target_size=self.params.SCALES[0], max_size=self.params.MAX_SIZE, im_type='2D')
             else:
                 input_patch_zoom_in = scale_image(input_patch, target_size=self.params.SCALES[0], max_size=self.params.MAX_SIZE, im_type='2D')
                 # convert one channel image to 3 channel
@@ -229,15 +214,18 @@ class InferenceWrapper(object):
                 count_overlap[:, ind_chunk[0][0]:ind_chunk[0][1], ind_chunk[1][0]:ind_chunk[1][1]] += 1.0
             # get the final results
             outprob = np.divide(outprob, count_overlap)
-            outmap = np.argmax(outprob, axis=0)
             ### Scale prob back to input_patch size
-            outmap = outmap.astype(np.float32)
-            outmap_zoom_out = scale_image(outmap, target_size=new_size[0], max_size=self.params.MAX_SIZE, im_type='2D')
+            outprob_zoom_out = np.zeros((outprob.shape[0], new_size[0], new_size[0]), dtype=np.float32)
+            for ind_class in xrange(outprob.shape[0]):
+                outprob_zoom_out[ind_class, :, :] = scale_image(outprob[ind_class, :, :], target_size=new_size[0], max_size=self.params.MAX_SIZE, im_type='2D')
             # pred_map
-            pred_map[row_col_page_b[0]:row_col_page_e[0], row_col_page_b[1]:row_col_page_e[1]] = outmap_zoom_out
+            pred_map[:, row_col_page_b[0]:row_col_page_e[0], row_col_page_b[1]:row_col_page_e[1]] = outprob_zoom_out
             if self.params.DEBUG:
-                fig, axes = plt.subplots(1, 5)
-                vis_seg(axes, [im[:,:,0], gt[:,:,0], input_patch_zoom_in[:,:,0], outmap_zoom_out, pred_map])
+                img_list = [im[:,:,0], gt[:,:,0], input_patch_zoom_in[:,:,0]]
+                for ind_class in xrange(outprob.shape[0]):
+                    img_list.extend([outprob_zoom_out[ind_class,:,:], pred_map[ind_class,:,:]])
+                fig, axes = plt.subplots(int(np.ceil(len(img_list)/4.)), 4)
+                vis_seg(axes, img_list)
         return pred_map
 
     def test_2d(self, data_unit):
@@ -256,12 +244,14 @@ class InferenceWrapper(object):
             filename = '{}_pred{}'.format(filename, ext)
         """ Do Forward
         """
-        prediction_map = np.zeros(im.shape, dtype=im.dtype)
+        prediction_map_shape = [self.CLASS_NUM,]
+        prediction_map_shape.extend(im.shape)
+        prediction_map = np.zeros(prediction_map_shape, dtype=im.dtype)
         if ext in ('.jpg', '.png', '.npy'):
-            prediction_map[:,:,0] = self.get_output_map(im, gt)
+            prediction_map[:,:,:,0] = self.get_output_map(im, gt)
             if self.params.DEBUG:
                 fig, axes = plt.subplots(1, 3)
-                vis_seg(axes, [im[:,:,im.shape[2]/2], gt[:,:,gt.shape[2]/2], prediction_map[:,:,0]])
+                vis_seg(axes, [im[:,:,im.shape[2]/2], gt[:,:,gt.shape[2]/2], np.argmax(prediction_map[:,:,:,0], axis=0)])
                 exit()
             # construct output_path
             outdir = osp.join(self.output_dir, filename.split('_slice_')[0])
@@ -293,21 +283,22 @@ class InferenceWrapper(object):
                     each_im = each_im[:,:,np.newaxis]
                     each_gt = gt[:,:,ind_slice]
                     each_gt = each_gt[:,:,np.newaxis]
-                prediction_map[:,:,ind_slice] = self.get_output_map(each_im, each_gt)
+                prediction_map[:,:,:,ind_slice] = self.get_output_map(each_im, each_gt)
             if self.params.DEBUG:
                 fig, axes = plt.subplots(1, 3)
                 for ind_slice in xrange(ind_begin, ind_end):
-                    vis_seg(axes, [im[:,:,ind_slice], gt[:,:,ind_slice], prediction_map[:,:,ind_slice]])
+                    vis_seg(axes, [im[:,:,ind_slice], gt[:,:,ind_slice], np.argmax(prediction_map[:,:,:,ind_slice],axis=0)])
                 exit()
             # construct output_path
             output_path = osp.join(self.output_dir, filename)
         else:
             print 'error'
-        ### transform the datatype to unint8
-        prediction_map = prediction_map.astype(np.uint8)
+        ### argmax and transform the datatype to unint8
+        # prediction_map = np.argmax(prediction_map, axis=0)
+        # prediction_map = prediction_map.astype(np.uint8)
         """ Save """
         print('Save to {}'.format(output_path))
-        save_data(prediction_map, output_path)
+        # save_data(prediction_map, output_path)
         """ return status """
         return [im_path, gt_path, 'Success']
 
