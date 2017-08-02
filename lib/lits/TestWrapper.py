@@ -165,9 +165,11 @@ class InferenceWrapper(object):
         """ Input image(3 dimension)
         output pred_map(3 dimension). C*W*H
         """
-        pred_map_shape = [self.CLASS_NUM,]
+        pred_map_shape = [self.params.CLASS_NUM,]
         pred_map_shape.extend(im.shape[0:2])
         pred_map = np.zeros(pred_map_shape, dtype=np.float32)
+        # set regions that outside mask to have background prob 1.0
+        pred_map[0] = 1.0
         if not self.params.APPLY_MASK:
             if not self.params.ADJACENT:
                 # convert one channel image to 3 channel
@@ -202,8 +204,8 @@ class InferenceWrapper(object):
                 input_patch_zoom_in = np.repeat(input_patch_zoom_in, 3, axis=2)
             ### using overtile
             # count is for counting the times of each position has overlapped
-            count_overlap = np.zeros((3, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
-            outprob = np.zeros((3, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
+            count_overlap = np.zeros((self.params.CLASS_NUM, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
+            outprob = np.zeros((self.params.CLASS_NUM, input_patch_zoom_in.shape[0], input_patch_zoom_in.shape[1]), dtype=np.float32)
             chunks_index = split2chunks(input_patch_zoom_in.shape, (self.params.CHUNK_SHAPE[0],self.params.CHUNK_SHAPE[1],input_patch_zoom_in.shape[2]), (self.params.STRIDE[0],self.params.STRIDE[1],input_patch_zoom_in.shape[2]))
             for ind_chunk in chunks_index:
                 im_chunk = input_patch_zoom_in[ind_chunk[0][0]:ind_chunk[0][1], ind_chunk[1][0]:ind_chunk[1][1], ind_chunk[2][0]:ind_chunk[2][1]]
@@ -244,20 +246,22 @@ class InferenceWrapper(object):
             filename = '{}_pred{}'.format(filename, ext)
         """ Do Forward
         """
-        prediction_map_shape = [self.CLASS_NUM,]
+        prediction_map_shape = [self.params.CLASS_NUM,]
         prediction_map_shape.extend(im.shape)
         prediction_map = np.zeros(prediction_map_shape, dtype=im.dtype)
+        # initial set background prob 1.0
+        prediction_map[0] = 1.0
+
         if ext in ('.jpg', '.png', '.npy'):
             prediction_map[:,:,:,0] = self.get_output_map(im, gt)
             if self.params.DEBUG:
                 fig, axes = plt.subplots(1, 3)
                 vis_seg(axes, [im[:,:,im.shape[2]/2], gt[:,:,gt.shape[2]/2], np.argmax(prediction_map[:,:,:,0], axis=0)])
                 exit()
-            # construct output_path
+            # set outdir
             outdir = osp.join(self.output_dir, filename.split('_slice_')[0])
             if not os.path.exists(outdir):
                 os.makedirs(outdir)
-            output_path = osp.join(outdir, filename)
         elif ext in ('.nii'):
             if self.params.DEBUG:
                 plt.ion()
@@ -285,20 +289,53 @@ class InferenceWrapper(object):
                     each_gt = each_gt[:,:,np.newaxis]
                 prediction_map[:,:,:,ind_slice] = self.get_output_map(each_im, each_gt)
             if self.params.DEBUG:
-                fig, axes = plt.subplots(1, 3)
+                print prediction_map.shape, type(prediction_map), prediction_map.dtype
+                fig, axes = plt.subplots(2, 3)
                 for ind_slice in xrange(ind_begin, ind_end):
-                    vis_seg(axes, [im[:,:,ind_slice], gt[:,:,ind_slice], np.argmax(prediction_map[:,:,:,ind_slice],axis=0)])
+                    img_list = [im[:,:,ind_slice], gt[:,:,ind_slice]]
+                    for ind_class in xrange(prediction_map.shape[0]):
+                        img_list.append(prediction_map[ind_class,:,:,ind_slice])
+                    img_list.append(np.argmax(prediction_map[:,:,:,ind_slice],axis=0))
+                    vis_seg(axes, img_list)
                 exit()
-            # construct output_path
-            output_path = osp.join(self.output_dir, filename)
+            # set outdir
+            outdir = self.output_dir
         else:
             print 'error'
-        ### argmax and transform the datatype to unint8
-        # prediction_map = np.argmax(prediction_map, axis=0)
-        # prediction_map = prediction_map.astype(np.uint8)
         """ Save """
-        print('Save to {}'.format(output_path))
-        # save_data(prediction_map, output_path)
+        # construct output_path
+        pred_label_dir = osp.join(outdir, 'label')
+        pred_prob_dir = osp.join(outdir, 'prob')
+        if not os.path.exists(pred_label_dir):
+            os.makedirs(pred_label_dir)
+        if not os.path.exists(pred_prob_dir):
+            os.makedirs(pred_prob_dir)
+        ### save prediction label
+        pred_label_path = osp.join(pred_label_dir, filename)
+        # argmax and transform the datatype to unint8
+        prediction_label = np.argmax(prediction_map, axis=0)
+        prediction_label = prediction_label.astype(np.uint8)
+        print('Save label to {}'.format(pred_label_path))
+        save_data(prediction_label, pred_label_path)
+        ### save prediction prob maps
+        for ind_class in xrange(prediction_map.shape[0]):
+            f, ext = osp.splitext(filename)
+            pred_prob_name =  '{}-class-{}{}'.format(osp.splitext(filename)[0], ind_class, osp.splitext(filename)[1])
+            pred_prob_path =  osp.join(pred_prob_dir, pred_prob_name)
+            print('Save class {} to {}'.format(ind_class, pred_prob_path))
+            save_data(prediction_map[ind_class], pred_prob_path)
+        
+        if self.params.DEBUG:
+            print prediction_map.shape, type(prediction_map), prediction_map.dtype
+            fig, axes = plt.subplots(2, 3)
+            plt.ion()
+            for ind_slice in xrange(prediction_map.shape[-1]):
+                img_list = [im[:,:,ind_slice], gt[:,:,ind_slice]]
+                for ind_class in xrange(prediction_map.shape[0]):
+                    img_list.append(prediction_map[ind_class,:,:,ind_slice])
+                img_list.append(prediction_label[:,:,ind_slice])
+                vis_seg(axes, img_list)
+            exit()
         """ return status """
         return [im_path, gt_path, 'Success']
 
@@ -381,9 +418,9 @@ class InferenceWrapper(object):
             filename = 'volume-{}'.format(filename.split('-')[1])
             filename = '{}_pred{}'.format(filename, ext)
             if ext in ('.jpg', '.png', '.npy'):
-                prob_path = osp.join(self.output_dir, filename.split('_slice_')[0], filename)
+                prob_path = osp.join(self.output_dir, filename.split('_slice_')[0], 'label',filename)
             elif ext in ('.nii'):
-                prob_path = osp.join(self.output_dir, filename)
+                prob_path = osp.join(self.output_dir, 'label', filename)
             else:
                 print 'error'
             print gt_path, prob_path

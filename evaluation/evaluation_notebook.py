@@ -10,7 +10,8 @@ def get_scores(pred,label,vxlspacing):
     volscores = {}
 
     volscores['dice'] = metric.dc(pred,label)
-    volscores['jaccard'] = metric.binary.jc(pred,label)
+    volscores['jaccard'] = 0
+    # volscores['jaccard'] = metric.binary.jc(pred,label)
     volscores['voe'] = 0
     volscores['rvd'] = 0
     volscores['assd'] = 0

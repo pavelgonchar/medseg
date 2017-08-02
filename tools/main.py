@@ -15,6 +15,7 @@ import os.path as osp
 from easydict import EasyDict as edict
 from lits.config import cfg, set_solver_prototxt
 import CaffeWrapper as CW
+from lits.EvalWrapper import eval
 import os
 
 def parse_args():
@@ -64,6 +65,12 @@ def parse_args():
 						help='dataset to test',
 						default=None, type=str)
 
+	# create the parser for the "eval" command
+	parse_eval = subparsers.add_parser('eval', help='eval help')
+	parse_eval.add_argument('--gpu', dest='gpu_id',
+						help='GPU device id to use [0]',
+						default=0, type=int)
+
 	if len(sys.argv) == 1:
 		parser.print_help()
 		sys.exit(1)
@@ -86,8 +93,8 @@ cfg.PID = os.getpid()
 # cfg.EXP_DIR = 'unet/unet_2d_bn_c2'
 # snapshot_prefix = 'unet_2d_bn_c2_liver'
 # 3
-cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c2'
-snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c2'
+# snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
 ''' Lesion
 '''
 # 1 (1.1.5)
@@ -111,11 +118,11 @@ snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_original_weigted_c3'
 # snapshot_prefix = 'uvnet_2d_bn_original_weigted_c3_1.1.7_refined'
 # 7
-cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
-snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
 # 8
-#cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
-#snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10'
+cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
+snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10'
 ###### ###### ###### ###### ###### ######
 ''' 
 Train
@@ -157,7 +164,7 @@ cfg.TRAIN.USE_PREFETCH = False
 cfg.TRAIN.DISPLAY_INTERVAL = 100
 cfg.TRAIN.SOLVER = None
 cfg.TRAIN.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('train.prototxt')))
-cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_incept_weigted_c3_1.1.7_iter_260000.caffemodel')
+cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_incept_weigted_c3_1.1.7_iter_280000.caffemodel')
 cfg.TRAIN.IMDB_NAME = 'lits_Training_Batch_trainval_2D'
 cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
 ###### ###### ###### ###### ###### ######
@@ -186,7 +193,7 @@ cfg.TEST.ADJACENT = True
 cfg.TEST.CLASS_NUM = 3
 cfg.TEST.TRIM = edict()
 cfg.TEST.TRIM.MINSIZE = [64, 64, 1]
-cfg.TEST.TRIM.PAD = [16, 16, 0]
+cfg.TEST.TRIM.PAD = [32, 32, 0]
 
 cfg.TEST.BG = edict()
 cfg.TEST.BG.CLEAN = False
@@ -195,23 +202,32 @@ cfg.TEST.BG.BRIGHT = False
 cfg.TEST.HU_WINDOW = [-200, 300]
 cfg.TEST.DATA_RANGE= [0, 1]
 cfg.TEST.PIXEL_STATISTICS = (-93.59, 131.86)
-cfg.TEST.SCALES = (432,) # for zoom
-cfg.TEST.CHUNK_SHAPE = (432,432,1)
-cfg.TEST.STRIDE = (304,304,1)
+cfg.TEST.SCALES = (416,) # for zoom
+cfg.TEST.CHUNK_SHAPE = (416,416,1)
+cfg.TEST.STRIDE = (400,400,1)
 cfg.TEST.MAX_SIZE = 720
 cfg.TEST.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('test.prototxt')))
-cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 240000))
+cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 100000))
 cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
 # cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
 cfg.TEST.NUM_PROCESS = 6#the number of threads to do data augmentation
 cfg.TEST.MODE = 'TESTEVAL' # EVAL OR TEST OR TESTEVAL
 
+'''
+Evaluation
+'''
+cfg.EVAL = edict()
+cfg.EVAL.GT_DIR = '{}'.format('/home/zlp/dev/medseg/data/lits/Training_Batch')
+cfg.EVAL.PRED_DIR = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Training_Batch_val_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_280000/label')
+cfg.EVAL.OUT_DIR = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Training_Batch_val_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_280000')
+cfg.EVAL.NUM_PROCESS = 12 #the number of threads to do data augmentation
 
 
 if __name__ == '__main__':
 	
 	# sys.argv.extend(['train', '--gpu=0'])
 	# sys.argv.extend(['test', '--gpu=0'])
+	# sys.argv.extend(['eval', '--gpu=0'])
 	args = parse_args()
 	print('Called with args:')
 	print(args)
@@ -237,6 +253,7 @@ if __name__ == '__main__':
 			set_solver_prototxt(SOLVER_PARAMETER, cfg.TRAIN.SOLVER)
 		# delete cfg['TEST'] for better view
 		del cfg['TEST']
+		del cfg['EVAL']
 
 	elif args.subparser_name == 'test':
 		cfg.GPU_ID = args.gpu_id
@@ -248,6 +265,13 @@ if __name__ == '__main__':
 			cfg.TEST.IMDB_NAME = args.imdb_name
 		# delete cfg['TRAIN'] for better view
 		del cfg['TRAIN']
+		del cfg['EVAL']
+
+	elif args.subparser_name == 'eval':
+		cfg.GPU_ID = args.gpu_id
+		del cfg['TRAIN']
+		del cfg['TEST']
+
 	else:
 		print 'subparser_name error'
 		exit()
@@ -264,6 +288,8 @@ if __name__ == '__main__':
 		caffe_wrapper.train()
 	elif args.subparser_name  == 'test':
 		caffe_wrapper.test()
+	else:
+		eval(cfg.EVAL)
 
 
 
