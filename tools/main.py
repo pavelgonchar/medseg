@@ -93,8 +93,12 @@ cfg.PID = os.getpid()
 # cfg.EXP_DIR = 'unet/unet_2d_bn_c2'
 # snapshot_prefix = 'unet_2d_bn_c2_liver'
 # 3
-# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c2'
-# snapshot_prefix = 'uvnet_2d_bn_incept_liver_c2'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c2'
+# snapshot_prefix = 'uvnet_2d_bn_incept2_liver_c2'
+# 4
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c2'
+# snapshot_prefix = 'uvnet_2d_bn_incept2_liver_c2_416full'
+
 ''' Lesion
 '''
 # 1 (1.1.5)
@@ -118,11 +122,11 @@ cfg.PID = os.getpid()
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_original_weigted_c3'
 # snapshot_prefix = 'uvnet_2d_bn_original_weigted_c3_1.1.7_refined'
 # 7
-# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
-# snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
+cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
+snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
 # 8
-cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
-snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10'
 ###### ###### ###### ###### ###### ######
 ''' 
 Train
@@ -164,7 +168,7 @@ cfg.TRAIN.USE_PREFETCH = False
 cfg.TRAIN.DISPLAY_INTERVAL = 100
 cfg.TRAIN.SOLVER = None
 cfg.TRAIN.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('train.prototxt')))
-cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_incept_weigted_c3_1.1.7_iter_280000.caffemodel')
+cfg.TRAIN.PRETRAINED_MODEL = '{}'.format('/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept_weigted_c3/lits_Training_Batch_trainval_2D/uvnet_2d_bn_incept_weigted_c3_1.1.10_iter_80000.caffemodel')
 cfg.TRAIN.IMDB_NAME = 'lits_Training_Batch_trainval_2D'
 cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
 ###### ###### ###### ###### ###### ######
@@ -172,7 +176,7 @@ cfg.TRAIN.NUM_PROCESS = 6 #the number of threads to do data augmentation
 '''
 SOLVER_PARAMETER = edict()
 SOLVER_PARAMETER.NET = cfg.TRAIN.PROTOTXT
-SOLVER_PARAMETER.BASE_LR = 0.001
+SOLVER_PARAMETER.BASE_LR = 0.0001
 SOLVER_PARAMETER.MOMENTUM = 0.99
 SOLVER_PARAMETER.WEIGHT_DECAY = 0.0005
 SOLVER_PARAMETER.LR_POLICY = "step"
@@ -207,7 +211,7 @@ cfg.TEST.CHUNK_SHAPE = (416,416,1)
 cfg.TEST.STRIDE = (400,400,1)
 cfg.TEST.MAX_SIZE = 720
 cfg.TEST.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('test.prototxt')))
-cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 100000))
+cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 120000))
 cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
 # cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
 cfg.TEST.NUM_PROCESS = 6#the number of threads to do data augmentation
