@@ -211,11 +211,11 @@ cfg.TEST.CHUNK_SHAPE = (416,416,1)
 cfg.TEST.STRIDE = (400,400,1)
 cfg.TEST.MAX_SIZE = 720
 cfg.TEST.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('test.prototxt')))
-cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 220000))
-cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
-# cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
+cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 100000))
+# cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
+cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
 cfg.TEST.NUM_PROCESS = 6#the number of threads to do data augmentation
-cfg.TEST.MODE = 'TESTEVAL' # EVAL OR TEST OR TESTEVAL
+cfg.TEST.MODE = 'TEST' # EVAL OR TEST OR TESTEVAL
 
 '''
 Evaluation
