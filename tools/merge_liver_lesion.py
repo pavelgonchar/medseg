@@ -55,6 +55,9 @@ def combine_liver_liver(infolder1, infolder2, outfolder):
 
 
 def merge_liver_lesion(infolder1, infolder2, outfolder):
+	###
+	# keep liver_data's liver label and lesion_data's lesion label
+	###
 	livers = load_segmentations_test(infolder1, prefix='test-segmentation-', suffix='.nii')
 	lesions  = load_segmentations_test(infolder2, prefix='test-segmentation-', suffix='.nii')
 	#print livers, lesions
@@ -84,11 +87,11 @@ def merge_liver_lesion(infolder1, infolder2, outfolder):
 		# keep liver_data's liver label and lesion_data's lesion label
 		###
 		print liver_data.dtype, lesion_data.dtype
-		# print np.sum(liver_data == 0), np.sum(liver_data == 1), np.sum(liver_data == 2)
-		# print np.sum(lesion_data ==0), np.sum(lesion_data == 1), np.sum(lesion_data==2)
+		# get liver only from liver_data, set others to zeros
+		liver_data[liver_data>1] = 0
 		# get lesion only from lesion_data, set others to zeros
 		lesion_data[lesion_data < 2] = 0
-		# move lesion to liver_data, lesion will overrie
+		# move lesion to liver_data, liver will overrie
 		liver_data += lesion_data
 		liver_data[liver_data > 1] = 2
 		# print np.sum(liver_data==0), np.sum(liver_data == 1), np.sum(liver_data==2)
@@ -139,16 +142,16 @@ def model_combination(infolders, outfolder):
 		out_image = np.zeros(multi_images_d[0].shape, dtype=multi_images_d[0].dtype)
 		for ind_model in xrange(len(multi_images_d)):
 			image_data = multi_images_d[ind_model]
-			print image_data.dtype, np.sum(image_data == 0), np.sum(image_data == 1), np.sum(image_data == 2)
+			# print image_data.dtype, np.sum(image_data == 0), np.sum(image_data == 1), np.sum(image_data == 2)
 			image_data[image_data>1] = 10
-			print image_data.dtype, np.sum(image_data == 0), np.sum(image_data == 1), np.sum(image_data == 10)
+			# print image_data.dtype, np.sum(image_data == 0), np.sum(image_data == 1), np.sum(image_data == 10)
 			out_image += image_data
 
 		### process the label
 		out_image[out_image<1] = 0
 		out_image[(out_image>=1)&(out_image<10)] = 1
 		out_image[out_image>=10] = 2
-		print out_image.dtype, np.sum(out_image == 0), np.sum(out_image == 1), np.sum(out_image == 2)
+		# print out_image.dtype, np.sum(out_image == 0), np.sum(out_image == 1), np.sum(out_image == 2)
 		### save merge results
 		outpath = os.path.join(outfolder, multi_images_f[0])
 		print 'Output file will save to: {}\n'.format(outpath)
@@ -223,15 +226,68 @@ def model_average(infolders, outfolder):
 		### save out_label
 		outpath = os.path.join(outfolder, multi_images_f[0])
 		print out_label.dtype
-        print 'Output file will save to: {}\n'.format(outpath)
+		print 'Output file will save to: {}\n'.format(outpath)
 		save_data(out_label, outpath)
 		### process the label
 		# out_image[out_image<1] = 0
 		# out_image[(out_image>=1)&(out_image<10)] = 1
 		# out_image[out_image>=10] = 2
 		# print out_image.dtype, np.sum(out_image == 0), np.sum(out_image == 1), np.sum(out_image == 2)
-		
-		
+	print '=== DONE ==='
+
+
+def refine_liver(infolder1, infolder2, outfolder):
+	livers1 = load_segmentations_test(infolder1, prefix='test-segmentation-', suffix='.nii')
+	livers2 = load_segmentations_test(infolder2, prefix='test-segmentation-', suffix='.nii')
+	#print livers1, livers2
+	assert len(livers1)==len(livers2), 'liver1 number must equal to livers2 number'
+	print 'Total number of livers1: {}\n'.format(len(livers1))
+	if not os.path.exists(outfolder):
+		os.makedirs(outfolder)
+	
+	for ind in range(len(livers1)):
+		liver1_f = livers1[ind]
+		liver2_f = livers2[ind]
+		liver1_index = os.path.splitext(liver1_f)[0].split('-')[2]
+		liver2_index = os.path.splitext(liver2_f)[0].split('-')[2]
+		assert liver1_index == liver2_index, 'index mismatch'
+		liver1_path = os.path.join(infolder1, liver1_f)
+		liver2_path = os.path.join(infolder2, liver2_f)
+		print 'liver1_path: {}'.format(liver1_path)
+		print 'liver2_path: {}'.format(liver2_path)
+		# load Image
+		liver1_metadata = load_data(liver1_path)
+		liver2_metadata = load_data(liver2_path)
+		assert liver1_metadata is not None, 'liver1 open failed'
+		assert liver2_metadata is not None, 'liver2 open failed'
+		liver1_data = liver1_metadata['image_data']
+		liver2_data = liver2_metadata['image_data']
+		###
+		# keep liver1_data's liver label and liver1_data's lesions label
+		# and
+		# add liver2_data's liver label
+		###
+		print liver1_data.dtype, liver2_data.dtype
+		print np.sum(liver1_data == 0), np.sum(liver1_data == 1), np.sum(liver1_data == 2)
+		print np.sum(liver2_data ==0), np.sum(liver2_data == 1), np.sum(liver2_data==2)
+		# set liver1_data's lesion to label 10 in order to keep it
+		# set liver2_data's lesion to label 0, in order to remove it
+		liver1_data[liver1_data>1] = 10
+		liver2_data[liver2_data>1] = 0
+		print np.sum(liver1_data == 0), np.sum(liver1_data == 1), np.sum(liver1_data == 10)
+		print np.sum(liver2_data ==0), np.sum(liver2_data == 1), np.sum(liver2_data==2)
+		# add liver2_data's liver to liver1_data
+		liver1_data += liver2_data
+		# set label
+		liver1_data[liver1_data<=0] = 0
+		liver1_data[(liver1_data>0)&(liver1_data<10)] = 1
+		liver1_data[liver1_data>=10] = 2
+		print liver1_data.dtype
+		print np.sum(liver1_data == 0), np.sum(liver1_data == 1), np.sum(liver1_data == 2)
+		### save merge results
+		outpath = os.path.join(outfolder, liver1_f)
+		print 'Output file will save to: {}\n'.format(outpath)
+		save_data(liver1_data, outpath)
 	print '=== DONE ==='
 
 
@@ -240,7 +296,9 @@ if __name__ == "__main__":
 	# task_type = 'combine_liver_liver'
 	task_type = 'merge_liver_lesion'
 	# task_type = 'model_combination'
-	assert task_type in ('combine_liver_liver', 'merge_liver_lesion', 'model_combination', 'model_average'), 'task type error'
+	# task_type = 'model_average'
+
+	assert task_type in ('combine_liver_liver', 'merge_liver_lesion', 'model_combination', 'model_average', 'refine_liver', 'model_average'), 'task type error'
 	print task_type
 	if task_type == 'combine_liver_liver':
 		''' 
@@ -258,29 +316,55 @@ if __name__ == "__main__":
 		infolder1: 2 classes for bg and liver
 		infolder2: 3 classes for bg, liver and lesion
 		'''
-		root_folder = '/home/zlp/dev/medseg'
+		root_folder = '/home/zlp/dev/medseg/output/uvnet'
 		# infolder1 = os.path.join(root_folder, 'output/unet/unet_2d_bn_c2/lits_Test_Batch_trainval_3D/unet_2d_bn_c2_multiloss_iter_200000_LCC')
 		# infolder2 = os.path.join(root_folder, 'output/unet/unet_2d_bn_c3/lits_Test_Batch_trainval_3D/unet_2d_bn_c3_zoom_refine_iter_160000_LCC')
 		# outfolder = os.path.join(root_folder, 'output/unet/unet_2d_bn_c3/lits_Test_Batch_trainval_3D/unet_2d_bn_c3_zoom_refine_iter_160000_LCC_merge')
 		# infolder1 = os.path.join(root_folder, 'output/unet/unet_2d_bn_c2/lits_Test_Batch_trainval_3D/unet_2d_bn_c2_liver_iter_280000_LCC')
 		# infolder2 = os.path.join(root_folder, 'output/unet/unet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D/unet_2d_bn_weigted_c3_zoom_iter_220000_LCC')
-		# outfolder = os.path.join(root_folder, 'output/unet/unet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D/unet_2d_bn_weigted_c3_zoom_iter_220000_LCC_merge')
-		infolder1 = os.path.join(root_folder, 'output/unet/unet_2d_bn_c2/lits_Test_Batch_trainval_3D/unet_2d_bn_c2_liver_iter_280000_LCC')
-		infolder2 = os.path.join(root_folder, 'output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/lesion_250000_LCC_280000LCC_300000LCC_MC_LCC')
-		outfolder = os.path.join(root_folder, 'output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG')
+		# # outfolder = os.path.join(root_folder, 'output/unet/unet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D/unet_2d_bn_weigted_c3_zoom_iter_220000_LCC_merge')
+		# infolder1 = os.path.join(root_folder, 'output/unet/unet_2d_bn_c2/lits_Test_Batch_trainval_3D/unet_2d_bn_c2_liver_iter_280000_LCC')
+		# infolder2 = os.path.join(root_folder, 'output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/lesion_250000_LCC_280000LCC_300000LCC_MC_LCC')
+		# outfolder = os.path.join(root_folder, 'output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG')
+		infolder1 = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/uvnet_weigted_250000_LCC_MG_LCC_incept2_liver_120000_label_LCC_lesion_label_LCC_MG_LCC_MC_LCC')
+		infolder2 = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/lesions_12_14_15_16_MC_MG')
+		outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/lesions_12_14_15_16_MC_MG_MG')
+		# infolder1 = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/uvnet_weigted_250000_LCC_MG_LCC_incept2_liver_120000_label_LCC_lesion_label_LCC_MG_LCC_MC_LCC')
+		# infolder2 = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MG_LCC')
+		# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MG_LCC_MG')
 		merge_liver_lesion(infolder1, infolder2, outfolder)
 
 	elif task_type == 'model_combination':
 		"""infolder list"""
-		root_folder = '/home/zlp/dev/medseg/output'
-		files = ['uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_280000_LCC', 
-				 'uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_300000_LCC',
-				 'uvnet/uvnet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC']
-		outfolder = os.path.join(root_folder,'uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/lesion_250000_LCC_280000LCC_300000LCC_MC')
+		# root_folder = '/home/zlp/dev/medseg/output'
+		# files = ['uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_280000_LCC', 
+		# 		 'uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_modified_weigted_c3_1.1.7_refined_iter_300000_LCC',
+		# 		 'uvnet/uvnet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC']
+		# outfolder = os.path.join(root_folder,'uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/lesion_250000_LCC_280000LCC_300000LCC_MC')
+
+		# root_folder = '/home/zlp/dev/medseg/output'
+		# files = ['uvnet/uvnet_2d_bn_incept2_weigted_c2/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_liver_c2_refined_iter_120000/label_LCC', 
+		# 		 'uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/label_LCC']
+		# outfolder = os.path.join(root_folder,'uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MC')
+		root_folder = '/home/zlp/dev/medseg/output/uvnet'
+		files = ['uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/lesions_12_14_15_16_MC_MG',
+		'uvnet_2d_bn_incept2_weigted_c2/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_liver_c2_refined_refined_iter_60000/label_LCC']
+		outfolder = os.path.join(root_folder,'uvnet_2d_bn_incept2_weigted_c3/lesions_12_14_15_16_MC_MG_MC')
+		
 		infolders =[os.path.join(root_folder,f) for f in files]
+		# infolders =[os.path.join(root_folder,f) for f in files]
 		model_combination(infolders, outfolder)
 	elif task_type == 'model_average':
-		pass
+		root_folder = '/home/zlp/dev/medseg/output/uvnet'
+		files = ['uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000', 
+				 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_140000',
+				 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_150000',
+				 'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_160000']
+		outfolder = os.path.join(root_folder,'uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D/uvnet_incept2_ave')
+		
+		infolders =[os.path.join(root_folder,f) for f in files]
+
+		model_average(infolders, outfolder)
 	else:
 		print 'error'
 	

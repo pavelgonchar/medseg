@@ -93,8 +93,8 @@ cfg.PID = os.getpid()
 # cfg.EXP_DIR = 'unet/unet_2d_bn_c2'
 # snapshot_prefix = 'unet_2d_bn_c2_liver'
 # 3
-# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c2'
-# snapshot_prefix = 'uvnet_2d_bn_incept2_liver_c2_refined'
+cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c2'
+snapshot_prefix = 'uvnet_2d_bn_incept2_liver_c2_refined_refined'
 # 4
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c2'
 # snapshot_prefix = 'uvnet_2d_bn_incept2_liver_c2_416full'
@@ -125,8 +125,8 @@ cfg.PID = os.getpid()
 # cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept_weigted_c3'
 # snapshot_prefix = 'uvnet_2d_bn_incept_weigted_c3_1.1.10'
 # 8
-cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
-snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined'
+# cfg.EXP_DIR = 'uvnet/uvnet_2d_bn_incept2_weigted_c3'
+# snapshot_prefix = 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined'
 ###### ###### ###### ###### ###### ######
 ''' 
 Train
@@ -194,7 +194,7 @@ cfg.TEST.DEBUG = False
 cfg.TEST.FAST_INFERENCE = True # IF IMAGES HAVE GTS, THEN PERFORM FAST INFERENCE
 cfg.TEST.APPLY_MASK = True
 cfg.TEST.ADJACENT = True
-cfg.TEST.CLASS_NUM = 3
+cfg.TEST.CLASS_NUM = 2
 cfg.TEST.TRIM = edict()
 cfg.TEST.TRIM.MINSIZE = [64, 64, 1]
 cfg.TEST.TRIM.PAD = [32, 32, 0]
@@ -211,10 +211,10 @@ cfg.TEST.CHUNK_SHAPE = (416,416,1)
 cfg.TEST.STRIDE = (400,400,1)
 cfg.TEST.MAX_SIZE = 720
 cfg.TEST.PROTOTXT = osp.abspath(osp.join(cfg.MODELS_DIR, cfg.EXP_DIR, '{}'.format('test.prototxt')))
-cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 100000))
+cfg.TEST.CAFFEMODEL = osp.join(cfg.OUTPUT_DIR, cfg.EXP_DIR, 'lits_Training_Batch_trainval_2D', '{}_iter_{}.caffemodel'.format(snapshot_prefix, 60000))
 # cfg.TEST.IMDB_NAME = 'lits_Training_Batch_val_3D'
 cfg.TEST.IMDB_NAME = 'lits_Test_Batch_trainval_3D'
-cfg.TEST.NUM_PROCESS = 6#the number of threads to do data augmentation
+cfg.TEST.NUM_PROCESS = 6 #the number of threads to do data augmentation
 cfg.TEST.MODE = 'TEST' # EVAL OR TEST OR TESTEVAL
 
 '''
@@ -230,7 +230,7 @@ cfg.EVAL.NUM_PROCESS = 12 #the number of threads to do data augmentation
 if __name__ == '__main__':
 	
 	# sys.argv.extend(['train', '--gpu=0'])
-	# sys.argv.extend(['test', '--gpu=0'])
+	# sys.argv.extend(['test', '--gpu=1'])
 	# sys.argv.extend(['eval', '--gpu=0'])
 	args = parse_args()
 	print('Called with args:')

@@ -104,7 +104,37 @@ if __name__ == "__main__":
 	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_weigted_c3/lits_Test_Batch_trainval_3D'
 	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG')
 	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_weigted_1.1.7_iter_250000_LCC_MG_LCC')
-	root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D'
-	infolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG')
-	outfolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG_LCC')
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG')
+	# outfolder = os.path.join(root_folder, 'liver_280000LCC_lesion_250000_LCC_280000LCC_300000LCC_MC_LCC_MG_LCC')
+
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/label')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/label_LCC')
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c2/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_liver_c2_refined_iter_120000/label')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_liver_c2_refined_iter_120000/label_LCC')
+
+
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MC')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MC_LCC')
+
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/uvnet_weigted_250000_LCC_MG_LCC_incept2_liver_120000_label_LCC_lesion_label_LCC_MG_LCC_MC')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_100000/uvnet_weigted_250000_LCC_MG_LCC_incept2_liver_120000_label_LCC_lesion_label_LCC_MG_LCC_MC_LCC')
+
+	root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	infolder = os.path.join(root_folder, 'lesions_12_14_15_16_MC_MG_MG')
+	outfolder = os.path.join(root_folder, 'lesions_12_14_15_16_MC_MG_MG_LCC')
+
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/liver5_lesion_best_MC')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/liver5_lesion_best_MC_LCC')
+
+	# root_folder = '/home/zlp/dev/medseg/output/uvnet/uvnet_2d_bn_incept2_weigted_c3/lits_Test_Batch_trainval_3D'
+	# infolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MG_LCC_MG')
+	# outfolder = os.path.join(root_folder, 'uvnet_2d_bn_incept2_weigted_c3_1.1.10_refined_iter_120000/incept2_liver_refined_120000_label_LCC_lesion_label_LCC_MG_LCC_MG_LCC')
+
 	largest_connected_component(infolder, outfolder)
+

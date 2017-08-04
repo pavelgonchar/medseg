@@ -432,6 +432,8 @@ class InferenceWrapper(object):
             gt_data = gt_metadata['image_data']
             voxelspacing = gt_metadata['image_header'].get_zooms()[:3]
             prob_data = prob_metadata['image_data']
+            if self.params.CLASS_NUM == 2:
+                gt_data[gt_data>0] = 1
             # add 2 in case
             #print np.sum(prob_data > 1), np.sum(gt_data > 1)
             if np.sum(prob_data>1) == 0:
