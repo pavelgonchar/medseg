@@ -155,11 +155,92 @@ def model_combination(infolders, outfolder):
 		save_data(out_image, outpath)
 	print '=== DONE ==='
 
+def model_average(infolders, outfolder):
+	''' 
+	Label_Path = infolder + 'label'
+	Prob_Path = infolder + 'prob'
+	MA_Path = infolder + 'model_average'
+	'''
+	models = []
+	for infolder in infolders:
+		# load each models' images
+		model = load_segmentations_test(os.path.join(infolder, 'label'), prefix='test-segmentation-', suffix='.nii')
+		if models:
+			assert len(models[len(models)-1])==len(model), 'model mismatch'
+		print 'model has {} images\n'.format(len(model))
+		models.append(model)
+	if not os.path.exists(outfolder):
+		os.makedirs(outfolder)
+	# iterate images
+	for ind_image in xrange(len(models[0])):
+		multi_images_d = []
+		multi_images_f = []
+		# iterate load models
+		for ind_model in xrange(len(models)):
+			model = models[ind_model]
+			image_f = model[ind_image]
+			prob_c0_f = '{}-class-0{}'.format(os.path.splitext(image_f)[0], os.path.splitext(image_f)[1])
+			prob_c1_f = '{}-class-1{}'.format(os.path.splitext(image_f)[0], os.path.splitext(image_f)[1])
+			prob_c2_f = '{}-class-2{}'.format(os.path.splitext(image_f)[0], os.path.splitext(image_f)[1])
+			# path
+			label_path = os.path.join(infolders[ind_model], 'label', image_f)
+			prob_c0_path = os.path.join(infolders[ind_model], 'prob', prob_c0_f)
+			prob_c1_path = os.path.join(infolders[ind_model], 'prob', prob_c1_f)
+			prob_c2_path = os.path.join(infolders[ind_model], 'prob', prob_c2_f)
+			print 'model {}:\n'.format(ind_model)
+			print 'label_path: {}\n'.format(label_path)
+			print 'prob_c0_path: {}\n'.format(prob_c0_path)
+			print 'prob_c1_path: {}\n'.format(prob_c1_path)
+			print 'prob_c2_path: {}\n'.format(prob_c2_path)
+			# load data
+			prob_c0_metadata = load_data(prob_c0_path)
+			prob_c1_metadata = load_data(prob_c1_path)
+			prob_c2_metadata = load_data(prob_c2_path)
+			assert prob_c0_metadata is not None, 'prob_c0 open failed'
+			assert prob_c1_metadata is not None, 'prob_c1 open failed'
+			assert prob_c2_metadata is not None, 'prob_c2 open failed'
+			prob_c0_data = prob_c0_metadata['image_data']
+			prob_c1_data = prob_c1_metadata['image_data']
+			prob_c2_data = prob_c2_metadata['image_data']
+			prob_data = np.concatenate((prob_c0_data[np.newaxis,...], prob_c1_data[np.newaxis,...], prob_c2_data[np.newaxis,...]), axis=0)
+			multi_images_d.append(prob_data)
+			multi_images_f.append(image_f)
+
+		# iterate check models' images
+		for ind_f in xrange(1, len(multi_images_f)):
+			assert multi_images_f[0] == multi_images_f[ind_f], 'index mismatch'
+			assert multi_images_d[0].shape == multi_images_d[ind_f].shape, 'image shape mismatch'
+
+		### iterate add models
+		out_image = np.zeros(multi_images_d[0].shape, dtype=multi_images_d[0].dtype)
+		for ind_model in xrange(len(multi_images_d)):
+			out_image += multi_images_d[ind_model]
+		### average models
+		out_image /= float(len(multi_images_d))
+		### argmax and transform the datatype to unint8
+		out_label = np.argmax(out_image, axis=0)
+		out_label = out_label.astype(np.uint8)
+		### save out_label
+		outpath = os.path.join(outfolder, multi_images_f[0])
+		print out_label.dtype
+        print 'Output file will save to: {}\n'.format(outpath)
+		save_data(out_label, outpath)
+		### process the label
+		# out_image[out_image<1] = 0
+		# out_image[(out_image>=1)&(out_image<10)] = 1
+		# out_image[out_image>=10] = 2
+		# print out_image.dtype, np.sum(out_image == 0), np.sum(out_image == 1), np.sum(out_image == 2)
+		
+		
+	print '=== DONE ==='
+
+
+
 if __name__ == "__main__":
 	# task_type = 'combine_liver_liver'
 	task_type = 'merge_liver_lesion'
 	# task_type = 'model_combination'
-	assert task_type in ('combine_liver_liver', 'merge_liver_lesion', 'model_combination'), 'task type error'
+	assert task_type in ('combine_liver_liver', 'merge_liver_lesion', 'model_combination', 'model_average'), 'task type error'
 	print task_type
 	if task_type == 'combine_liver_liver':
 		''' 
@@ -198,6 +279,8 @@ if __name__ == "__main__":
 		outfolder = os.path.join(root_folder,'uvnet/uvnet_2d_bn_modified_weigted_c3/lits_Test_Batch_trainval_3D/lesion_250000_LCC_280000LCC_300000LCC_MC')
 		infolders =[os.path.join(root_folder,f) for f in files]
 		model_combination(infolders, outfolder)
+	elif task_type == 'model_average':
+		pass
 	else:
 		print 'error'
 	
